@@ -1,0 +1,3 @@
+# Windows/Unix qator oxirlarini bir xilda saqlash
+* text=auto eol=lf
+*.bat text eol=crlf

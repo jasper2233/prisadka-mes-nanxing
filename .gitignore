@@ -1,0 +1,20 @@
+# Real parol va IP manzil bor — commit qilinmaydi
+firmware/config.py
+firmware/settings.json
+
+# prototip bazasi - commit qilinmaydi
+mes-data.db
+mes-data.db-wal
+mes-data.db-shm
+
+# chiqarilgan namuna fayllar
+eksport/
+
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+
+# vaqtinchalik rasm/skrinshotlar
+*.jpg
+*.png
