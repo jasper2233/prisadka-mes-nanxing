@@ -16,6 +16,24 @@ python stop.py               # to'xtatish
 
 Windows da `start.bat` faylini ikki marta bosish ham kifoya.
 
+## Sex kompyuteri uchun: bitta .exe
+
+Python o'rnatilmagan kompyuterda ishlatish uchun:
+
+```bash
+python build_exe.py          # dist/PrisadkaMES.exe (~9 MB)
+```
+
+Shu bitta faylni sex kompyuteriga ko'chirasiz va ikki marta bosasiz —
+MQTT broker, baza, veb-interfeys va USB ko'prik birga ishga tushadi,
+Chrome ochiladi. Baza (`mes-data.db`) .exe yonida hosil bo'ladi.
+
+```
+PrisadkaMES.exe                 MES + USB ko'prik + Chrome
+PrisadkaMES.exe --sim-demo      Pico'siz sinash: smena ssenariysi
+PrisadkaMES.exe --kiosk         sex monitori uchun to'liq ekran
+```
+
 Keyin brauzerda: **http://localhost:8080**
 
 - **Monitor** — stanok holati, availability, so'nggi hodisalar

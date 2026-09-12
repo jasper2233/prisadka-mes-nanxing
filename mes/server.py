@@ -45,6 +45,12 @@ async def run(args):
         print("Tekshirish: http://localhost:{}".format(args.http_port))
         return
 
+    if getattr(args, "quiet", False):
+        # .exe ichida app.py o'z bannerini chiqaradi - ikki marta kerak emas
+        async with mqtt_srv, http_srv:
+            await asyncio.Event().wait()
+        return
+
     ip = local_ip()
     print("-" * 62)
     print("  MES ekrani   : http://localhost:{}".format(args.http_port))

@@ -6,12 +6,12 @@
 import subprocess
 import sys
 
-TARGETS = ("mes.server", "mes.serial_bridge", "pico_sim")
+TARGETS = ("mes.server", "mes.serial_bridge", "pico_sim", "app.py")
 
 PS = r"""
 Get-CimInstance Win32_Process -Filter "Name='python.exe'" | ForEach-Object {
   $c = $_.CommandLine
-  if ($c -and ($c -match 'mes\.server' -or $c -match 'mes\.serial_bridge' -or $c -match 'pico_sim')) {
+  if ($c -and ($c -match 'mes\.server' -or $c -match 'mes\.serial_bridge' -or $c -match 'pico_sim' -or $c -match 'app\.py')) {
     Write-Output "to'xtatildi: PID $($_.ProcessId)"
     Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
   }

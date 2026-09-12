@@ -7,10 +7,19 @@ PostgreSQL o'rnatmaslik uchun SQLite ishlatiladi. Vaqtlar unix soniyada
 
 import os
 import sqlite3
+import sys
 import time
 
-DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(
-    os.path.abspath(__file__))), "mes-data.db")
+
+def _data_dir():
+    """.exe ichida ishlaganda baza vaqtinchalik papkaga tushmasligi kerak -
+    aks holda dastur yopilganda hamma ma'lumot yo'qoladi."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+DEFAULT_PATH = os.path.join(_data_dir(), "mes-data.db")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS downtime_reason (

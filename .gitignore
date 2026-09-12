@@ -18,3 +18,8 @@ __pycache__/
 # vaqtinchalik rasm/skrinshotlar
 *.jpg
 *.png
+
+# .exe qurish natijalari
+build/
+dist/
+*.spec

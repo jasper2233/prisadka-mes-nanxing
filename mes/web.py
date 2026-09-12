@@ -5,11 +5,21 @@ Minimal asyncio HTTP server - tashqi kutubxonasiz. Sahifa `ui.html` da.
 
 import json
 import os
+import sys
 import time
 
 from . import db
 
-UI_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui.html")
+
+def _ui_path():
+    """.exe ichida resurslar `sys._MEIPASS` ga chiqariladi."""
+    base = getattr(sys, "_MEIPASS", None)
+    if base:
+        return os.path.join(base, "mes", "ui.html")
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui.html")
+
+
+UI_PATH = _ui_path()
 DAY = 86400
 
 

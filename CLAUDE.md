@@ -19,6 +19,7 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 | Pico simulyatori (`sim/`) | ✅ Haqiqiy firmware kodi bilan, temirsiz sinov |
 | Temirda sinov | 🟡 Qisman — Pico W'siz plataga MicroPython v1.29 o'rnatildi, firmware yuklandi, USB transport va MES→Pico buyruq yo'li tekshirildi. **Chiroq simlari hali ulanmagan** — qolgan sinovlar: `docs/tz.md` 12-bo'lim |
 | Ishga tushirgich | ✅ `start.py` / `start.bat` — MES + ko'prik + Chrome bitta buyruqda |
+| Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), Python talab qilmaydi |
 | Ishlab chiqarish brokeri (Mosquitto) + PostgreSQL | ❌ Yo'q — prototip SQLite/Python broker'da |
 | MES PRO ga yozish | ⏳ Muhandislardan javob kutilmoqda — so'rov: `docs/mes-pro-integration.md` |
 
@@ -210,6 +211,9 @@ mes/               Vaqtinchalik MES (prototip). Faqat Python stdlib.
   export.py        CSV/JSON chiqarish. Keyinchalik MES PRO ga yozadigan joy.
 sim/
   pico_sim.py      Pico simulyatori — haqiqiy fsm.py/lamps.py bilan.
+start.py           Ishlab chiqish uchun: qismlarni alohida jarayonlarda ochadi.
+app.py             .exe kirish nuqtasi: hammasi bitta jarayonda, oqimlar bilan.
+build_exe.py       PyInstaller bilan mustaqil .exe quradi.
 tests/
   test_fsm.py      Holat mashinasi.
   test_link.py     Bufer, qayta ulanish (soxta network + umqtt).
