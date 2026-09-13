@@ -10,11 +10,13 @@ Keyin:
 
 import argparse
 import asyncio
+import os
 import socket
 
 from . import bridge as bridge_mod
 from . import broker as broker_mod
 from . import db
+from . import telegram
 from . import web as web_mod
 
 
@@ -31,11 +33,19 @@ def local_ip():
 
 
 async def run(args):
-    con = db.connect(args.db)
+    db_path = args.db or db.DEFAULT_PATH
+    con = db.connect(db_path)
+
+    # Telegram: bazaning yonida telegram.json bo'lsa yoqiladi (ichida token bor,
+    # shuning uchun .gitignore da va .exe ga qo'shilmaydi)
+    tg_path = getattr(args, "telegram", None) or os.path.join(
+        os.path.dirname(os.path.abspath(db_path)), "telegram.json")
+    tg = telegram.load_bot(tg_path, db_path)
+    notify = tg.notify if tg else None
     bk = broker_mod.Broker(port=args.mqtt_port)
-    br = bridge_mod.Bridge(con)
+    br = bridge_mod.Bridge(con, notify=notify)
     br.attach(bk)
-    wb = web_mod.Web(con, bk, port=args.http_port)
+    wb = web_mod.Web(con, bk, port=args.http_port, notify=notify)
 
     try:
         mqtt_srv = await bk.serve()
@@ -44,6 +54,9 @@ async def run(args):
         print("Port band ({}). MES serveri allaqachon ishlayaptimi?".format(e))
         print("Tekshirish: http://localhost:{}".format(args.http_port))
         return
+
+    if tg:
+        tg.start()
 
     if getattr(args, "quiet", False):
         # .exe ichida app.py o'z bannerini chiqaradi - ikki marta kerak emas

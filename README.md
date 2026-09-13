@@ -43,6 +43,22 @@ PrisadkaMES.exe --sim-demo      Pico'siz sinash: smena ssenariysi
 PrisadkaMES.exe --kiosk         sex monitori uchun to'liq ekran
 ```
 
+### Telegram
+
+.exe yoniga `telegram.json` qo'ying:
+
+```json
+{"token": "BOTFATHER-BERGAN-TOKEN"}
+```
+
+Dasturni qayta ishga tushiring va Telegram'da botni ochib **Start** bosing —
+birinchi bosgan odam avtomatik ulanadi. Boshqalarni ulash uchun botga `/kod`
+yozing va ular `/start KOD` yuborsin.
+
+Bot yuboradi: avariya, uzoq kutish, stanok o'chdi/yoqildi, aloqa uzildi,
+tayyor detallar, operator ko'rsatgan sabablar, soatlik hisobot.
+Buyruqlar: `/holat`, `/hisobot`, `/kod`, `/stop`.
+
 Ikkinchi marta bosilsa yangi nusxa ochilmaydi — faqat MES ekrani ochiladi.
 Avtozapusk Windows'ning foydalanuvchi `Run` bo'limi orqali ishlaydi, admin
 huquqi kerak emas.

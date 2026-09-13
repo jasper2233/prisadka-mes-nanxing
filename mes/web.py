@@ -24,12 +24,13 @@ DAY = 86400
 
 
 class Web:
-    def __init__(self, con, broker, host="0.0.0.0", port=8080, log=print):
+    def __init__(self, con, broker, host="0.0.0.0", port=8080, log=print, notify=None):
         self.con = con
         self.broker = broker
         self.host = host
         self.port = port
         self.log = log
+        self.notify = notify
 
     # ---------------------------------------------------------- HTTP qatlami
     async def handle(self, reader, writer):
@@ -174,6 +175,19 @@ class Web:
         if not cur.rowcount:
             raise ValueError("to'xtash topilmadi")
         self.log("sabab: {} -> {}".format(d.get("downtime_id"), code))
+        if self.notify:
+            try:
+                row = self.con.execute(
+                    "SELECT d.machine_id, d.state, d.duration_s, d.started_at, r.name_uz "
+                    "FROM downtime d JOIN downtime_reason r ON r.code = d.reason_code "
+                    "WHERE d.downtime_id = ?", (d.get("downtime_id"),)).fetchone()
+                if row:
+                    self.notify("reason", machine=row["machine_id"], state=row["state"],
+                                duration_s=row["duration_s"] or db.now() - row["started_at"],
+                                reason_name=row["name_uz"], comment=comment or None,
+                                set_by=d.get("set_by") or "operator")
+            except Exception as e:
+                self.log("xabarnoma xatosi (reason): {!r}".format(e))
         return {"ok": True}
 
     def send_cmd(self, d):

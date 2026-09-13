@@ -13,14 +13,14 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 |---|---|
 | Pico firmware (`firmware/`) | ✅ Yozilgan, simulyatsiyada tekshirilgan, temirda sinalmagan |
 | USB-serial transport | ✅ `link_serial.py` + `mes/serial_bridge.py` (Wi-Fi'siz Pico uchun) |
-| Testlar (`tests/`) | ✅ 45 ta test: fsm (14), link (8), bridge (10), serial (13) |
+| Testlar (`tests/`) | ✅ 66 ta test: fsm (14), link (8), bridge (10), serial (13), telegram (21) |
 | MES prototipi (`mes/`) | ✅ Broker + SQLite + veb, stdlib'dan boshqa hech narsa kerak emas |
 | Operator ekrani (sabab tanlash) | ✅ `http://localhost:8080` → "To'xtashlar" |
 | Pico simulyatori (`sim/`) | ✅ Haqiqiy firmware kodi bilan, temirsiz sinov |
 | Temirda sinov | 🟡 Qisman — Pico W'siz plataga MicroPython v1.29 o'rnatildi, firmware yuklandi, USB transport va MES→Pico buyruq yo'li tekshirildi. **Chiroq simlari hali ulanmagan** — qolgan sinovlar: `docs/tz.md` 12-bo'lim |
 | Ishga tushirgich | ✅ `start.py` / `start.bat` — MES + ko'prik + Chrome bitta buyruqda |
 | Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), oynasiz, avtozapusk bilan. Bu kompyuterda `C:\PrisadkaMES\` ga o'rnatilgan va avtozapuskda |
-| Telegram bot | ⏳ Token tekshirildi (`@kromkabot`), `telegram.json` da (gitignore). Ulash hali qilinmagan |
+| Telegram bot | ✅ `mes/telegram.py`, `@kromkabot`. exe ichida ishlayapti. Egasi hali Start bosmagan |
 | Ishlab chiqarish brokeri (Mosquitto) + PostgreSQL | ❌ Yo'q — prototip SQLite/Python broker'da |
 | MES PRO ga yozish | ⏳ Muhandislardan javob kutilmoqda — so'rov: `docs/mes-pro-integration.md` |
 
@@ -210,6 +210,7 @@ mes/               Vaqtinchalik MES (prototip). Faqat Python stdlib.
   server.py        Hammasini bitta jarayonda: python -m mes.server
   serial_bridge.py Pico USB → MQTT ko'prigi (stanokdagi kompyuterda).
   export.py        CSV/JSON chiqarish. Keyinchalik MES PRO ga yozadigan joy.
+  telegram.py      Telegram bot: hodisalar, /holat, /hisobot, soatlik hisobot.
 sim/
   pico_sim.py      Pico simulyatori — haqiqiy fsm.py/lamps.py bilan.
 start.py           Ishlab chiqish uchun: qismlarni alohida jarayonlarda ochadi.
@@ -222,6 +223,7 @@ tests/
   test_link.py     Bufer, qayta ulanish (soxta network + umqtt).
   test_bridge.py   MES ko'prigi, QR bog'lanishi, dublikatlar.
   test_serial.py   USB transport: Pico tomoni + ko'prik tomoni.
+  test_telegram.py Bot: ulanish kodi, xabarlar, 429/401/403, ko'prik ulanishi.
 docs/
   tz.md            ⭐ Texnik topshiriq — asosiy hujjat.
   mes-pro-integration.md  MES PRO muhandislariga so'rov: maydonlar, savollar.
@@ -246,6 +248,26 @@ python -m mes.server                  # broker + baza + veb (localhost:8080)
 python -m mes.serial_bridge           # Pico USB -> MQTT
 python sim/pico_sim.py --mode demo    # simulyator
 ```
+
+### Telegram bot (`mes/telegram.py`)
+
+Bazaning yonida `telegram.json` bo'lsa yoqiladi. **Ichida token bor** —
+`.gitignore` da, .exe ga bundle qilinmaydi, commit oldidan
+`git grep --cached <token-bo'lagi>` bilan tekshiriladi.
+
+- **Chat ID ni qo'lda yozish kerak emas.** Bot getUpdates ni tinglaydi;
+  BIRINCHI `/start` bosgan chat kodsiz ulanadi (egasi), keyingilar
+  `/start KOD` yuboradi (`join_code`, egasi `/kod` bilan oladi). Kodsiz
+  ochiq qoldirilsa botni topgan har kim zavod ma'lumotini olardi.
+- Tokenning `:` gacha qismi — **botning o'z ID si**, foydalanuvchi chat ID si
+  emas. Bot o'ziga xabar yubora olmaydi.
+- `notify()` MQTT brokerning asyncio oqimidan chaqiriladi — faqat navbatga
+  qo'shadi, tarmoqqa alohida oqim chiqadi. Sekin internet brokerni qotirmasin.
+- Ovozli: avariya, uzoq kutish, stanok o'chdi, aloqa uzildi. Ovozsiz: detal,
+  sabab ko'rsatildi, aloqa tiklandi, soatlik hisobot (tinch soatda yuborilmaydi).
+- `Bridge.__init__` hamma stanokni `online = 0` qiladi: broker yangi, hali
+  hech kim ulanmagan. Aks holda eski "onlayn" /holat da yolg'on ko'rinardi.
+- Bitta token bilan getUpdates ni faqat bitta dastur o'qiy oladi (aks holda 409).
 
 ### .exe bilan ishlashda nozik joylar
 
@@ -340,10 +362,10 @@ Bularga javob bo'lmaguncha tegishli kodni "tuzatish" kerak emas:
 
 ## 8. Ishlash tartibi
 
-- Kod o'zgartirilsa, to'rttala test ham ishga tushirilsin — **alohida jarayonda**
+- Kod o'zgartirilsa, beshala test ham ishga tushirilsin — **alohida jarayonda**
   (har biri `sys.modules["time"]` ni almashtiradi):
   `python tests/test_fsm.py; python tests/test_link.py;`
-  `python tests/test_bridge.py; python tests/test_serial.py`
+  `python tests/test_bridge.py; python tests/test_serial.py; python tests/test_telegram.py`
   Yangi holat qoidasi qo'shilsa, testga ham ssenariy qo'shiladi.
 - Firmware mantiqi o'zgarsa, simulyatorda ham tekshirilsin:
   `python -m mes.server` + `python sim/pico_sim.py --mode demo`.

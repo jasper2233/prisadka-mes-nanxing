@@ -25,13 +25,35 @@ from . import db
 SCAN_WINDOW_S = 4 * 3600
 
 QUEUE_EMPTY_STATES = ("IDLE", "STOPPED", "OFF")
+
+
+def _local_midnight():
+    import time
+    t = time.localtime()
+    return int(time.mktime((t.tm_year, t.tm_mon, t.tm_mday, 0, 0, 0, 0, 0, -1)))
 GREEN_STATES = ("PROCESSING", "AWAIT_PART")
 
 
 class Bridge:
-    def __init__(self, con, log=print):
+    def __init__(self, con, log=print, notify=None):
         self.con = con
         self.log = log
+        # notify(kind, **data) - masalan Telegram. Faqat navbatga qo'shishi kerak:
+        # bu kod MQTT brokerning asyncio oqimida ishlaydi.
+        self.notify = notify
+        # Broker yangi ishga tushdi - hozir hech qaysi qurilma ulanmagan.
+        # Aks holda oldingi ishga tushirishdan qolgan "onlayn" ko'rinib turardi.
+        self.con.execute("UPDATE machine_state SET online = 0")
+        self.con.commit()
+
+    def _notify(self, kind, **data):
+        """Xabarnoma xatosi hech qachon bazaga yozishni buzmasligi kerak."""
+        if self.notify is None:
+            return
+        try:
+            self.notify(kind, **data)
+        except Exception as e:
+            self.log("xabarnoma xatosi ({}): {!r}".format(kind, e))
 
     # ---------- MQTT topiklari ----------
     def attach(self, broker):
@@ -153,7 +175,11 @@ class Bridge:
 
         # 1) ochiq to'xtashni yopish
         close_id = d.get("closes_downtime_id")
+        close_state = None
         if close_id:
+            row = self.con.execute("SELECT state FROM downtime WHERE downtime_id = ?",
+                                   (close_id,)).fetchone()
+            close_state = row["state"] if row else prev
             self.con.execute("""
                 UPDATE downtime SET ended_at = ?, duration_s = ?
                 WHERE downtime_id = ? AND ended_at IS NULL""",
@@ -181,6 +207,15 @@ class Bridge:
             machine_id, d.get("seq"), d.get("prev_state"), d.get("state"),
             d.get("prev_duration_s"), "  detal=" + part_id if part_id else ""))
 
+        # avval yopish, keyin ochish - STOPPED -> FAULT da ikkalasi ham keladi
+        if close_id:
+            self._notify("downtime_close", machine=machine_id, state=close_state,
+                         duration_s=d.get("prev_duration_s"), new_state=state, ts=ts)
+        if open_id:
+            self._notify("downtime_open", machine=machine_id, state=state,
+                         prev_state=prev, prev_duration_s=d.get("prev_duration_s"),
+                         ts=ts, part_id=part_id)
+
     def on_cycle(self, machine_id, d):
         ts = d.get("ts") or db.now()
         session = d.get("session", "?")
@@ -199,6 +234,12 @@ class Bridge:
             self.log("[{}] SIKL {} kutish={}s ishlov={}s {}".format(
                 machine_id, part_id or "-", d.get("wait_s"), d.get("process_s"),
                 "tugallandi" if d.get("completed") else "TUGALLANMADI"))
+            today = self.con.execute(
+                "SELECT COUNT(*) c FROM part_cycle WHERE machine_id = ? AND completed = 1 "
+                "AND ts >= ?", (machine_id, _local_midnight())).fetchone()["c"]
+            self._notify("cycle", machine=machine_id, part_id=part_id,
+                         wait_s=d.get("wait_s"), process_s=d.get("process_s"),
+                         completed=bool(d.get("completed")), today_count=today, ts=ts)
 
     def on_snapshot(self, machine_id, d):
         self.ensure_machine(machine_id, d.get("site"), d.get("session"))
@@ -218,12 +259,18 @@ class Bridge:
 
     def on_online(self, machine_id, payload):
         val = 1 if payload.strip() in (b"1", b"true") else 0
+        row = self.con.execute("SELECT online FROM machine_state WHERE machine_id = ?",
+                               (machine_id,)).fetchone()
+        was = (row["online"] or 0) if row else 0
         self.ensure_machine(machine_id, None, None)
         self.con.execute(
             "UPDATE machine_state SET online = ?, updated_at = ? WHERE machine_id = ?",
             (val, db.now(), machine_id))
         self.con.commit()
         self.log("[{}] {}".format(machine_id, "ONLAYN" if val else "UZILDI"))
+        # retained xabar qayta kelishi mumkin - faqat haqiqiy o'zgarishda xabar beramiz
+        if was != val:
+            self._notify("online", machine=machine_id, online=bool(val))
 
     def ensure_machine(self, machine_id, site, session):
         self.con.execute("""
