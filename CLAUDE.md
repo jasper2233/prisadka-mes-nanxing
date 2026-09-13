@@ -13,7 +13,7 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 |---|---|
 | Pico firmware (`firmware/`) | ✅ Yozilgan, simulyatsiyada tekshirilgan, temirda sinalmagan |
 | USB-serial transport | ✅ `link_serial.py` + `mes/serial_bridge.py` (Wi-Fi'siz Pico uchun) |
-| Testlar (`tests/`) | ✅ 42 ta test: fsm (11), link (8), bridge (10), serial (13) |
+| Testlar (`tests/`) | ✅ 45 ta test: fsm (14), link (8), bridge (10), serial (13) |
 | MES prototipi (`mes/`) | ✅ Broker + SQLite + veb, stdlib'dan boshqa hech narsa kerak emas |
 | Operator ekrani (sabab tanlash) | ✅ `http://localhost:8080` → "To'xtashlar" |
 | Pico simulyatori (`sim/`) | ✅ Haqiqiy firmware kodi bilan, temirsiz sinov |

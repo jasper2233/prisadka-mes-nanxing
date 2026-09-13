@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 NAME = "PrisadkaMES"
@@ -21,12 +22,17 @@ NAME = "PrisadkaMES"
 # kerak - u haqiqiy fsm.py va lamps.py kodini ishlatadi.
 DATA = [
     ("mes/ui.html", "mes"),
-    ("firmware/config.py", "firmware"),
     ("firmware/lamps.py", "firmware"),
     ("firmware/fsm.py", "firmware"),
     ("firmware/settings.py", "firmware"),
     ("sim/pico_sim.py", "sim"),
 ]
+
+# config.py o'rniga HAR DOIM config.example.py bundle qilinadi (config.py
+# nomi bilan). Ikki sabab: config.py da real Wi-Fi paroli bor va u .exe
+# orqali tarqalmasligi kerak; u .gitignore da, ya'ni yangi klonda umuman
+# yo'q. Simulyatorga faqat pin va vaqt sozlamalari kerak - ular bir xil.
+CONFIG_TEMPLATE = "firmware/config.example.py"
 
 
 def main():
@@ -36,26 +42,28 @@ def main():
         print("PyInstaller yo'q. O'rnating:  pip install pyinstaller")
         return 1
 
-    missing = [src for src, _ in DATA if not os.path.exists(os.path.join(ROOT, src))]
+    needed = [src for src, _ in DATA] + [CONFIG_TEMPLATE]
+    missing = [src for src in needed if not os.path.exists(os.path.join(ROOT, src))]
     if missing:
         print("Fayllar topilmadi: {}".format(", ".join(missing)))
         return 1
 
-    # config.py da real parol bo'lishi mumkin - bundle ga tushmasin.
-    cfg = os.path.join(ROOT, "firmware", "config.py")
-    src = cfg if os.path.exists(cfg) else os.path.join(ROOT, "firmware",
-                                                       "config.example.py")
-    if src != cfg:
-        print("Eslatma: firmware/config.py yo'q, config.example.py ishlatiladi.")
+    stage = tempfile.mkdtemp(prefix="prisadka-bundle-")
+    stage_cfg = os.path.join(stage, "config.py")
+    shutil.copyfile(os.path.join(ROOT, CONFIG_TEMPLATE), stage_cfg)
 
     cmd = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
            "--onefile", "--console", "--name", NAME]
     for rel, dest in DATA:
         cmd += ["--add-data", "{}{}{}".format(rel, os.pathsep, dest)]
+    cmd += ["--add-data", "{}{}firmware".format(stage_cfg, os.pathsep)]
     cmd += ["--hidden-import", "serial.tools.list_ports", "app.py"]
 
     print("Qurilmoqda... (birinchi marta 1-2 daqiqa)")
-    r = subprocess.run(cmd, cwd=ROOT)
+    try:
+        r = subprocess.run(cmd, cwd=ROOT)
+    finally:
+        shutil.rmtree(stage, ignore_errors=True)
     if r.returncode:
         print("Qurish muvaffaqiyatsiz tugadi.")
         return r.returncode
