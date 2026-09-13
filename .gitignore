@@ -23,3 +23,10 @@ __pycache__/
 build/
 dist/
 *.spec
+
+# Telegram bot tokeni - HECH QACHON commit qilinmaydi
+telegram.json
+
+# exe ish fayllari (jurnal, ilova sozlamasi)
+logs/
+prisadka-app.json

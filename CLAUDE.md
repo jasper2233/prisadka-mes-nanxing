@@ -19,7 +19,8 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 | Pico simulyatori (`sim/`) | ✅ Haqiqiy firmware kodi bilan, temirsiz sinov |
 | Temirda sinov | 🟡 Qisman — Pico W'siz plataga MicroPython v1.29 o'rnatildi, firmware yuklandi, USB transport va MES→Pico buyruq yo'li tekshirildi. **Chiroq simlari hali ulanmagan** — qolgan sinovlar: `docs/tz.md` 12-bo'lim |
 | Ishga tushirgich | ✅ `start.py` / `start.bat` — MES + ko'prik + Chrome bitta buyruqda |
-| Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), Python talab qilmaydi |
+| Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), oynasiz, avtozapusk bilan. Bu kompyuterda `C:\PrisadkaMES\` ga o'rnatilgan va avtozapuskda |
+| Telegram bot | ⏳ Token tekshirildi (`@kromkabot`), `telegram.json` da (gitignore). Ulash hali qilinmagan |
 | Ishlab chiqarish brokeri (Mosquitto) + PostgreSQL | ❌ Yo'q — prototip SQLite/Python broker'da |
 | MES PRO ga yozish | ⏳ Muhandislardan javob kutilmoqda — so'rov: `docs/mes-pro-integration.md` |
 
@@ -213,6 +214,8 @@ sim/
   pico_sim.py      Pico simulyatori — haqiqiy fsm.py/lamps.py bilan.
 start.py           Ishlab chiqish uchun: qismlarni alohida jarayonlarda ochadi.
 app.py             .exe kirish nuqtasi: hammasi bitta jarayonda, oqimlar bilan.
+                   Oynasiz, jurnal logs/ ga, bitta nusxa (mutex), avtozapusk
+                   HKCU\...\Run orqali (--install/--uninstall/--stop/--status).
 build_exe.py       PyInstaller bilan mustaqil .exe quradi.
 tests/
   test_fsm.py      Holat mashinasi.
@@ -243,6 +246,23 @@ python -m mes.server                  # broker + baza + veb (localhost:8080)
 python -m mes.serial_bridge           # Pico USB -> MQTT
 python sim/pico_sim.py --mode demo    # simulyator
 ```
+
+### .exe bilan ishlashda nozik joylar
+
+- **O'zini qayta chaqirganda `PYINSTALLER_RESET_ENVIRONMENT=1` shart**
+  (`app.child_env()`). Bitta faylli .exe o'zini `%TEMP%\_MEIxxxx` ga ochadi;
+  bu o'zgaruvchisiz bola jarayon otasining papkasini meros qiladi, ota chiqib
+  uni o'chirganda bola `No module named '_overlapped'` bilan yiqiladi.
+  `--install` da aynan shunday bo'lgan.
+- **Bitta faylli .exe = ikki jarayon** (yuklovchi + Python). `--stop` o'zini
+  ham, o'z yuklovchisini ham (`os.getppid()`) chetlab o'tadi — aks holda o'z
+  yuklovchisini o'ldiradi va job obyekti orqali o'zi ham yopiladi.
+- `taskkill`/`tasklist` xabarlari Windows tiliga bog'liq (bu kompyuterda
+  ruscha) — matnga emas, `tasklist /FO CSV` ga tayaniladi.
+- Oynasiz .exe da `sys.stdout = None` — `app.setup_logging()` uni jurnalga
+  yo'naltiradi. Buni olib tashlasangiz, stdout ga yozadigan kod yiqiladi.
+- Bundle ga `config.py` emas, `config.example.py` qo'shiladi (real parol
+  .exe orqali tarqalmasin; yangi klonda `config.py` umuman yo'q).
 
 ### Temirga yuklash (mpremote)
 

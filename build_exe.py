@@ -53,7 +53,7 @@ def main():
     shutil.copyfile(os.path.join(ROOT, CONFIG_TEMPLATE), stage_cfg)
 
     cmd = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
-           "--onefile", "--console", "--name", NAME]
+           "--onefile", "--windowed", "--name", NAME]
     for rel, dest in DATA:
         cmd += ["--add-data", "{}{}{}".format(rel, os.pathsep, dest)]
     cmd += ["--add-data", "{}{}firmware".format(stage_cfg, os.pathsep)]

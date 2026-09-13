@@ -24,15 +24,28 @@ Python o'rnatilmagan kompyuterda ishlatish uchun:
 python build_exe.py          # dist/PrisadkaMES.exe (~9 MB)
 ```
 
-Shu bitta faylni sex kompyuteriga ko'chirasiz va ikki marta bosasiz —
-MQTT broker, baza, veb-interfeys va USB ko'prik birga ishga tushadi,
-Chrome ochiladi. Baza (`mes-data.db`) .exe yonida hosil bo'ladi.
+**O'rnatish:** faylni doimiy papkaga qo'ying (masalan `C:\PrisadkaMES\`) va
+ikki marta bosing. Birinchi ochilganda «Kompyuter yoqilganda ishga
+tushsinmi?» deb so'raydi. Shundan keyin kompyuter har yoqilganda o'zi ishga
+tushadi va Chrome da MES ekranini ochadi.
+
+Dastur **oynasiz** ishlaydi — operator tasodifan yopib qo'ya olmaydi.
+Hamma narsa .exe yonida: `mes-data.db` (baza), `logs\prisadka.log` (jurnal).
 
 ```
 PrisadkaMES.exe                 MES + USB ko'prik + Chrome
+PrisadkaMES.exe --install       avtozapuskni yoqish va ishga tushirish
+PrisadkaMES.exe --uninstall     avtozapuskni o'chirish va to'xtatish
+PrisadkaMES.exe --stop          to'xtatish
+PrisadkaMES.exe --status        ishlayaptimi, avtozapusk, jurnal qayerda
+PrisadkaMES.exe --console       jurnalni jonli ko'rish oynasi bilan
 PrisadkaMES.exe --sim-demo      Pico'siz sinash: smena ssenariysi
 PrisadkaMES.exe --kiosk         sex monitori uchun to'liq ekran
 ```
+
+Ikkinchi marta bosilsa yangi nusxa ochilmaydi — faqat MES ekrani ochiladi.
+Avtozapusk Windows'ning foydalanuvchi `Run` bo'limi orqali ishlaydi, admin
+huquqi kerak emas.
 
 Keyin brauzerda: **http://localhost:8080**
 

@@ -235,6 +235,7 @@ class SerialBridge:
     def run(self):
         self.connect_mqtt()
         last_try = 0
+        last_warn = 0
         while True:
             if self.port is None:
                 if time.time() - last_try < 2:
@@ -243,8 +244,12 @@ class SerialBridge:
                     continue
                 last_try = time.time()
                 if not self.open_port():
-                    print("Pico topilmadi, kutilmoqda... "
-                          "(BOOTSEL rejimida emasligini tekshiring)")
+                    # har 2 s da emas, daqiqada bir marta - avtozapuskda plata
+                    # soatlab ulanmagan bo'lishi mumkin, jurnal to'lib ketmasin
+                    if time.time() - last_warn >= 60:
+                        last_warn = time.time()
+                        print("Pico topilmadi, kutilmoqda... "
+                              "(USB ulanganini tekshiring)")
                     continue
 
             try:
