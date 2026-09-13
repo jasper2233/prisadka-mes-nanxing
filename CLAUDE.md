@@ -20,7 +20,7 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 | Temirda sinov | 🟡 Qisman — Pico W'siz plataga MicroPython v1.29 o'rnatildi, firmware yuklandi, USB transport va MES→Pico buyruq yo'li tekshirildi. **Chiroq simlari hali ulanmagan** — qolgan sinovlar: `docs/tz.md` 12-bo'lim |
 | Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), oynasiz, avtozapusk bilan. **Sex kompyuterida ishlaydi**; ishlab chiqish kompyuterida avtozapusk o'chirilgan |
 | Telegram bot | ✅ `mes/telegram.py`, `@kromkabot`. Sex kompyuteridagi exe da |
-| GitHub | ✅ `jasper2233/prisadka-mes` (yopiq). Yuklash: `git push` (gh hisobi orqali) |
+| GitHub | ✅ `jasper2233/prisadka-mes-nanxing` (yopiq). Yuklash: `git push` (gh hisobi orqali) |
 | Ishlab chiqarish brokeri (Mosquitto) + PostgreSQL | ❌ Yo'q — prototip SQLite/Python broker'da |
 | MES PRO ga yozish | ⏳ Muhandislardan javob kutilmoqda — so'rov: `docs/mes-pro-integration.md` |
 
