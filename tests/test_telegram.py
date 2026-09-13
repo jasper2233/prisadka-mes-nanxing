@@ -26,11 +26,14 @@ class FakeApi:
     def __init__(self):
         self.calls = []
         self.fail = []              # sendMessage uchun navbatdagi xatolar
+        self.fail_updates = []      # getUpdates uchun navbatdagi xatolar
 
     def __call__(self, method, payload=None, timeout=20):
         self.calls.append((method, payload or {}))
         if method == "sendMessage" and self.fail:
             raise self.fail.pop(0)
+        if method == "getUpdates" and self.fail_updates:
+            raise self.fail_updates.pop(0)
         return {"ok": True, "result": []}
 
     def sent(self):
@@ -141,6 +144,52 @@ def test_group_command_with_bot_name():
         r.say(OWNER, "/holat@kromkabot")
         r.flush()
         assert "Hali hech qaysi stanok" in r.api.sent()[0]["text"]
+    finally:
+        r.close()
+
+
+def test_reply_names_the_answering_computer():
+    """/holat qaysi kompyuterdan javob kelganini ko'rsatadi.
+
+    Bir marta shunday bo'lgan: bot ikki kompyuterda ishlagan, /holat ga bo'sh
+    bazali kompyuter javob berib "stanok yo'q" degan. Kompyuter nomi bo'lsa,
+    bu darhol ko'rinardi.
+    """
+    r = Rig(chat_ids=[OWNER])
+    try:
+        r.say(OWNER, "/holat")
+        r.flush()
+        assert r.bot.host in r.api.sent()[0]["text"], r.api.sent()[0]["text"]
+    finally:
+        r.close()
+
+
+def test_conflict_409_adds_warning_to_replies():
+    """Bot boshqa kompyuterda ham ishlasa (409), javobga ogohlantirish qo'shiladi."""
+    r = Rig(chat_ids=[OWNER])
+    try:
+        r.say(OWNER, "/holat")
+        r.flush()
+        assert "boshqa kompyuterda" not in r.api.sent()[-1]["text"]
+
+        r.api.fail_updates = [tg.TelegramError(409, "Conflict: terminated by other getUpdates")]
+        r.bot._poll_once()
+        r.say(OWNER, "/holat")
+        r.flush()
+        assert "boshqa kompyuterda" in r.api.sent()[-1]["text"], r.api.sent()[-1]["text"]
+    finally:
+        r.close()
+
+
+def test_conflict_warning_not_added_to_notifications():
+    """Ogohlantirish faqat buyruq javoblarida - har bir detal xabarida emas."""
+    r = Rig(chat_ids=[OWNER])
+    try:
+        r.api.fail_updates = [tg.TelegramError(409, "Conflict")]
+        r.bot._poll_once()
+        r.bot.notify("cycle", machine="M", completed=True, process_s=100, wait_s=5)
+        r.flush()
+        assert "boshqa kompyuterda" not in r.api.sent()[-1]["text"]
     finally:
         r.close()
 

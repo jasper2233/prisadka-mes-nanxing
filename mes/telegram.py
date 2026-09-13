@@ -44,6 +44,11 @@ API_URL = "https://api.telegram.org/bot{token}/{method}"
 QUEUE_MAX = 300             # internet uzoq yo'q bo'lsa eng eskilari tashlanadi
 SEND_INTERVAL = 1.05        # Telegram: bitta chatga sekundiga ~1 xabar
 LATE_NOTE_S = 300           # shundan kech yuborilgan xabarga izoh qo'shiladi
+CONFLICT_WARN_S = 600       # 409 dan keyin shuncha vaqt javoblarga ogohlantirish qo'shiladi
+
+CONFLICT_NOTE = ("\n\n⚠️ <b>Diqqat:</b> bu bot boshqa kompyuterda ham ishga "
+                 "tushirilgan. Buyruqlar ikkalasiga aralashib tushadi va javob "
+                 "noto'g'ri kompyuterdan kelishi mumkin. Faqat bittasini qoldiring.")
 
 DEFAULT_EVENTS = {"downtime": True, "cycle": True, "online": True,
                   "reason": True, "startup": True}
@@ -218,6 +223,9 @@ class TelegramBot:
         self._offset = 0
         self._stop = False
         self._net_warned_at = 0
+        self._conflict_at = 0
+        self._backoff = 5
+        self.host = socket.gethostname()
         self.disabled = False
         self.username = None
 
@@ -279,6 +287,11 @@ class TelegramBot:
             self._cv.notify()
 
     def reply(self, chat_id, text):
+        # Ikki kompyuter bitta botni talashsa, javob "noto'g'ri" kompyuterdan
+        # kelib, odamni chalg'itadi (bir marta shunday bo'lgan: /holat bo'sh
+        # bazadan "stanok yo'q" dedi). Ogohlantirish shu holatni darhol ko'rsatadi.
+        if time.time() - self._conflict_at < CONFLICT_WARN_S:
+            text += CONFLICT_NOTE
         self.enqueue(text, False, [chat_id])
 
     # ---------- yuboruvchi ----------
@@ -356,33 +369,37 @@ class TelegramBot:
                 return
         except Exception as e:
             self.log("Telegram: hozircha internet yo'q ({!r}), keyin qayta uriniladi".format(e))
-        backoff = 5
         while not self._stop and not self.disabled:
+            self._poll_once()
+
+    def _poll_once(self):
+        """Bitta getUpdates so'rovi va kelgan buyruqlarni bajarish (testlar uchun alohida)."""
+        try:
+            res = self._api("getUpdates", {"offset": self._offset, "timeout": 50,
+                                           "allowed_updates": ["message"]}, timeout=65)
+            self._backoff = 5
+        except TelegramError as e:
+            if e.code == 401:
+                self.disabled = True
+                return
+            if e.code == 409:
+                self._conflict_at = time.time()
+                self.log("Telegram: bu bot boshqa kompyuterda ham ishlayapti (409) - "
+                         "buyruqlar aralashib tushadi. Faqat bitta kompyuterda qoldiring.")
+                self._sleep(60)
+            else:
+                self._sleep(self._backoff)
+            return
+        except Exception:
+            self._sleep(self._backoff)
+            self._backoff = min(60, self._backoff * 2)
+            return
+        for u in res.get("result", []):
+            self._offset = u["update_id"] + 1
             try:
-                res = self._api("getUpdates", {"offset": self._offset, "timeout": 50,
-                                               "allowed_updates": ["message"]}, timeout=65)
-                backoff = 5
-            except TelegramError as e:
-                if e.code == 401:
-                    self.disabled = True
-                    return
-                if e.code == 409:
-                    self.log("Telegram: bu bot boshqa joyda ham ishlayapti (409) - "
-                             "buyruqlar shu kompyuterda qabul qilinmaydi")
-                    self._sleep(60)
-                else:
-                    self._sleep(backoff)
-                continue
-            except Exception:
-                self._sleep(backoff)
-                backoff = min(60, backoff * 2)
-                continue
-            for u in res.get("result", []):
-                self._offset = u["update_id"] + 1
-                try:
-                    self.handle_update(u)
-                except Exception as e:
-                    self.log("Telegram: buyruq xatosi: {!r}".format(e))
+                self.handle_update(u)
+            except Exception as e:
+                self.log("Telegram: buyruq xatosi: {!r}".format(e))
 
     def handle_update(self, u):
         m = u.get("message") or {}
@@ -443,8 +460,9 @@ class TelegramBot:
             midnight = local_midnight(now)
             machines = con.execute("SELECT * FROM machine_state ORDER BY machine_id").fetchall()
             if not machines:
-                return "Hali hech qaysi stanok ulanmagan."
-            lines = ["<b>Holat</b> · {}".format(fmt_time(now))]
+                return ("Hali hech qaysi stanok ulanmagan.\n"
+                        "💻 Javob bergan kompyuter: {}".format(esc(self.host)))
+            lines = ["<b>Holat</b> · {} · 💻 {}".format(fmt_time(now), esc(self.host))]
             for mrow in machines:
                 mid = mrow["machine_id"]
                 st = mrow["state"]
@@ -510,7 +528,8 @@ class TelegramBot:
                 blocks.append("\n".join(b))
             if not blocks:
                 return None
-            head = "📊 <b>{}</b> · {}–{}".format(title, fmt_time(since), fmt_time(until))
+            head = "📊 <b>{}</b> · {}–{} · 💻 {}".format(
+                title, fmt_time(since), fmt_time(until), esc(self.host))
             return head + "\n\n" + "\n\n".join(blocks)
         finally:
             con.close()

@@ -13,14 +13,14 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 |---|---|
 | Pico firmware (`firmware/`) | ✅ Yozilgan, simulyatsiyada tekshirilgan, temirda sinalmagan |
 | USB-serial transport | ✅ `link_serial.py` + `mes/serial_bridge.py` (Wi-Fi'siz Pico uchun) |
-| Testlar (`tests/`) | ✅ 66 ta test: fsm (14), link (8), bridge (10), serial (13), telegram (21) |
+| Testlar (`tests/`) | ✅ 69 ta test: fsm (14), link (8), bridge (10), serial (13), telegram (24) |
 | MES prototipi (`mes/`) | ✅ Broker + SQLite + veb, stdlib'dan boshqa hech narsa kerak emas |
 | Operator ekrani (sabab tanlash) | ✅ `http://localhost:8080` → "To'xtashlar" |
 | Pico simulyatori (`sim/`) | ✅ Haqiqiy firmware kodi bilan, temirsiz sinov |
 | Temirda sinov | 🟡 Qisman — Pico W'siz plataga MicroPython v1.29 o'rnatildi, firmware yuklandi, USB transport va MES→Pico buyruq yo'li tekshirildi. **Chiroq simlari hali ulanmagan** — qolgan sinovlar: `docs/tz.md` 12-bo'lim |
 | Ishga tushirgich | ✅ `start.py` / `start.bat` — MES + ko'prik + Chrome bitta buyruqda |
-| Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), oynasiz, avtozapusk bilan. Bu kompyuterda `C:\PrisadkaMES\` ga o'rnatilgan va avtozapuskda |
-| Telegram bot | ✅ `mes/telegram.py`, `@kromkabot`. exe ichida ishlayapti. Egasi hali Start bosmagan |
+| Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), oynasiz, avtozapusk bilan. **Sex kompyuterida ishlaydi**; ishlab chiqish kompyuterida avtozapusk o'chirilgan |
+| Telegram bot | ✅ `mes/telegram.py`, `@kromkabot`. Sex kompyuteridagi exe da |
 | Ishlab chiqarish brokeri (Mosquitto) + PostgreSQL | ❌ Yo'q — prototip SQLite/Python broker'da |
 | MES PRO ga yozish | ⏳ Muhandislardan javob kutilmoqda — so'rov: `docs/mes-pro-integration.md` |
 
@@ -268,6 +268,11 @@ Bazaning yonida `telegram.json` bo'lsa yoqiladi. **Ichida token bor** —
 - `Bridge.__init__` hamma stanokni `online = 0` qiladi: broker yangi, hali
   hech kim ulanmagan. Aks holda eski "onlayn" /holat da yolg'on ko'rinardi.
 - Bitta token bilan getUpdates ni faqat bitta dastur o'qiy oladi (aks holda 409).
+  **Bu haqiqatda bo'lgan:** exe fleshka orqali sex kompyuteriga ko'chirilgan,
+  eski kompyuterda esa avtozapuskda qolgan. Start ni eski kompyuter ushlagan,
+  /holat ga u bo'sh bazasidan "stanok yo'q" deb javob bergan, Chrome esa sex
+  kompyuteridan to'g'ri ko'rsatgan. Shundan keyin javoblarga kompyuter nomi
+  qo'shildi va 409 dan keyin 10 daqiqa ogohlantirish chiqadi.
 
 ### .exe bilan ishlashda nozik joylar
 
