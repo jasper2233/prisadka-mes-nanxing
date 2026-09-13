@@ -1,0 +1,8 @@
+-r requirements.txt
+
+# .exe qurish. 6.9+ kerak: app.py o'zini qayta chaqirganda
+# PYINSTALLER_RESET_ENVIRONMENT ishlatadi.
+pyinstaller>=6.9
+
+# Pico ga firmware yuklash
+mpremote>=1.20

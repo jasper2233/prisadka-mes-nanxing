@@ -129,15 +129,15 @@ eventlardagi `session` maydoniga tushadi.
 Sinovni kuzatish — MES ekranini oching:
 
 ```bash
-python start.py          # MES + USB ko'prik + Chrome
+python app.py            # MES + USB ko'prik + Chrome  (yoki PrisadkaMES.exe)
 ```
 
 Holat o'zgarishlari **Monitor** bo'limida, to'xtashlar **To'xtashlar** da
 darhol ko'rinadi. Sozlamani o'zgartirish uchun **Sinov paneli** →
 "Stanokka buyruq" (kutish limiti, hisoblagichni nollash, qayta yuklash).
 
-Xom xabarlarni ko'rish kerak bo'lsa, ko'prik oynasida har bir qator
-chiqib turadi (`MES event {...}`).
+Xom xabarlarni ko'rish kerak bo'lsa: `PrisadkaMES.exe --console` yoki
+jurnal `logs\prisadka.log`.
 
 ## 7. Cheklovlar
 

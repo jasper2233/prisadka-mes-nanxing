@@ -15,8 +15,9 @@ so'raydi.
     PrisadkaMES.exe --kiosk         Chrome to'liq ekran (sex monitori)
     PrisadkaMES.exe --no-browser    brauzersiz
 
-Farqi `start.py` dan: u qismlarni alohida jarayonlarda ochadi (ishlab
-chiqish uchun), bu esa hammasini bitta jarayonda, oqimlar bilan ishlatadi.
+Manbadan ham xuddi shunday ishlaydi: `python app.py --sim-demo`.
+Hammasi bitta jarayonda, oqimlar bilan (simulyatordan tashqari - u o'z
+jarayonida, chunki `sys.modules["time"]` ni almashtiradi).
 """
 
 import argparse

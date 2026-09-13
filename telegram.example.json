@@ -1,0 +1,12 @@
+{
+  "token": "123456789:BOTFATHER-BERGAN-TOKEN",
+  "chat_ids": [],
+  "events": {
+    "downtime": true,
+    "cycle": true,
+    "online": true,
+    "reason": true,
+    "startup": true
+  },
+  "summary_minutes": 60
+}

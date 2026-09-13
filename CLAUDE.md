@@ -18,7 +18,6 @@ to'xtash vaqtlarini va detal sikllarini MES tizimiga uzatuvchi qurilma.
 | Operator ekrani (sabab tanlash) | ✅ `http://localhost:8080` → "To'xtashlar" |
 | Pico simulyatori (`sim/`) | ✅ Haqiqiy firmware kodi bilan, temirsiz sinov |
 | Temirda sinov | 🟡 Qisman — Pico W'siz plataga MicroPython v1.29 o'rnatildi, firmware yuklandi, USB transport va MES→Pico buyruq yo'li tekshirildi. **Chiroq simlari hali ulanmagan** — qolgan sinovlar: `docs/tz.md` 12-bo'lim |
-| Ishga tushirgich | ✅ `start.py` / `start.bat` — MES + ko'prik + Chrome bitta buyruqda |
 | Mustaqil `.exe` | ✅ `build_exe.py` → `dist/PrisadkaMES.exe` (~9 MB), oynasiz, avtozapusk bilan. **Sex kompyuterida ishlaydi**; ishlab chiqish kompyuterida avtozapusk o'chirilgan |
 | Telegram bot | ✅ `mes/telegram.py`, `@kromkabot`. Sex kompyuteridagi exe da |
 | Ishlab chiqarish brokeri (Mosquitto) + PostgreSQL | ❌ Yo'q — prototip SQLite/Python broker'da |
@@ -213,7 +212,6 @@ mes/               Vaqtinchalik MES (prototip). Faqat Python stdlib.
   telegram.py      Telegram bot: hodisalar, /holat, /hisobot, soatlik hisobot.
 sim/
   pico_sim.py      Pico simulyatori — haqiqiy fsm.py/lamps.py bilan.
-start.py           Ishlab chiqish uchun: qismlarni alohida jarayonlarda ochadi.
 app.py             .exe kirish nuqtasi: hammasi bitta jarayonda, oqimlar bilan.
                    Oynasiz, jurnal logs/ ga, bitta nusxa (mutex), avtozapusk
                    HKCU\...\Run orqali (--install/--uninstall/--stop/--status).
@@ -233,13 +231,20 @@ docs/
 
 ### Ishga tushirish
 
+Bitta kirish nuqtasi — `app.py` (manbadan) yoki `PrisadkaMES.exe` (qurilgan):
+
 ```bash
-python start.py              # MES + USB ko'prik + Chrome (hammasi)
-python start.py --sim-demo   # Pico o'rniga simulyator, smena ssenariysi
-python start.py --kiosk      # sex monitori uchun to'liq ekran
-python start.py --autostart  # kompyuter yoqilganda o'zi ishga tushsin
-python stop.py               # hammasini to'xtatish
+pip install -r requirements.txt   # pyserial
+python app.py                     # MES + USB ko'prik + Chrome (hammasi)
+python app.py --sim-demo          # Pico o'rniga simulyator, smena ssenariysi
+python app.py --kiosk             # sex monitori uchun to'liq ekran
+python app.py --install           # avtozapusk (manbadan: pythonw app.py)
+python app.py --stop              # to'xtatish
+python build_exe.py               # dist/PrisadkaMES.exe (requirements-dev.txt)
 ```
+
+Eski `start.py`/`stop.py`/`start.bat` olib tashlangan — `app.py` ularning
+hammasini qiladi.
 
 Alohida qismlar kerak bo'lsa:
 

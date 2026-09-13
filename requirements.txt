@@ -1,0 +1,4 @@
+# Manbadan ishlatish uchun. MES serveri faqat Python standart kutubxonasida
+# ishlaydi; pyserial Pico USB ko'prigi uchun kerak (bo'lmasa sekinroq zaxira
+# usul ishlatiladi).
+pyserial>=3.5
